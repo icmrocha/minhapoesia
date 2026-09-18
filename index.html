@@ -80,6 +80,7 @@
     color: var(--mute);
     margin: 0 0 0.8rem;
   }
+  #leitor { scroll-margin-top: 1rem; }
   #leitor h2 {
     font-size: 1.35rem;
     font-weight: 600;
@@ -94,7 +95,7 @@
     color: var(--mute);
     line-height: 1.6;
   }
-  .actions { margin: 0 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+  .actions { margin: 0 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
   #btn-prev, #btn-rand, #btn-next {
     font: 0.75rem Helvetica, Arial, sans-serif;
     letter-spacing: 0.04em;
@@ -123,14 +124,14 @@
     <label class="lbl" for="busca">Busca</label>
     <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
   </div>
-  <div class="actions">
-    <button type="button" id="btn-prev">Anterior</button>
-    <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
-    <button type="button" id="btn-next">Seguinte</button>
-  </div>
   <p class="day-label" id="day-label">Poesia do dia</p>
   <article id="leitor"></article>
   <div class="stack">
+    <div class="actions">
+      <button type="button" id="btn-prev">Anterior</button>
+      <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
+      <button type="button" id="btn-next">Seguinte</button>
+    </div>
     <div>
       <label class="lbl" for="menu">Índice</label>
       <select id="menu"><option value="">Escolher um poema…</option></select>
@@ -245,6 +246,9 @@ function showPoem(i, asDay) {
     '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>" +
     (bits.length ? '<div class="meta-read">' + esc(bits.join(" · ")) + "</div>" : "");
   document.getElementById("menu").value = String(i);
+  if (!asDay) {
+    document.getElementById("leitor").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 function refreshHits() {
   const q = document.getElementById("busca").value.trim();
