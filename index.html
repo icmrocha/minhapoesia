@@ -152,6 +152,10 @@
 </div>
 <script>
 const JSON_URL = "https://icmrocha.github.io/poesia/poesias.json";
+// Tag no site de revisão: o poema inteiro some daqui.
+const TAG_ESCONDE_POEMA = ["privado"];
+// Tags que existem no JSON mas não aparecem nos chips nem embaixo do texto.
+const TAG_ESCONDE_NOME = ["privado"];
 const activeTags = new Set();
 const activeComps = new Set();
 let poems = [];
@@ -159,6 +163,15 @@ let current = -1;
 
 function fold(s) {
   return (s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+function isHiddenTag(t) {
+  return TAG_ESCONDE_NOME.includes(fold(t));
+}
+function isPrivatePoem(p) {
+  return asList(p.tags).some(t => TAG_ESCONDE_POEMA.includes(fold(t)));
+}
+function publicTags(p) {
+  return asList(p.tags).filter(t => !isHiddenTag(t));
 }
 function asList(v) {
   if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
@@ -170,7 +183,7 @@ function esc(s) {
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 function haystack(p) {
-  return fold([p.title, p.body || "", p.text || "", asList(p.tags).join(" "), asList(p.compilacoes).join(" ")].join(" "));
+  return fold([p.title, p.body || "", p.text || "", publicTags(p).join(" "), asList(p.compilacoes).join(" ")].join(" "));
 }
 function dayStamp() {
   const d = new Date();
@@ -184,7 +197,7 @@ function poemOfDayIndex(list) {
 }
 function matches(p) {
   const q = fold(document.getElementById("busca").value);
-  const tags = asList(p.tags).map(fold);
+  const tags = publicTags(p).map(fold);
   const comps = asList(p.compilacoes).map(fold);
   const tagsOk = !activeTags.size || [...activeTags].every(k => tags.includes(k));
   const compsOk = !activeComps.size || [...activeComps].every(k => comps.includes(k));
@@ -209,7 +222,7 @@ function fillChips(id, values, active) {
 function rebuildChips() {
   const tags = new Map(), comps = new Map();
   poems.forEach(p => {
-    asList(p.tags).forEach(v => { const k = fold(v); if (!tags.has(k)) tags.set(k, v); });
+    publicTags(p).forEach(v => { const k = fold(v); if (!tags.has(k)) tags.set(k, v); });
     asList(p.compilacoes).forEach(v => { const k = fold(v); if (!comps.has(k)) comps.set(k, v); });
   });
   fillChips("chips-tags", tags, activeTags);
@@ -219,7 +232,7 @@ function showPoem(i, asDay) {
   if (i < 0 || i >= poems.length) return;
   current = i;
   const p = poems[i];
-  const tags = asList(p.tags);
+  const tags = publicTags(p);
   const comps = asList(p.compilacoes);
   const bits = [];
   if (tags.length) bits.push("Tags: " + tags.join(", "));
@@ -292,7 +305,7 @@ fetch(JSON_URL + "?t=" + Date.now())
   .then(data => {
     const list = data.poems || data;
     if (!Array.isArray(list)) throw new Error("JSON inesperado");
-    poems = list.slice().sort((a, b) => fold(a.title).localeCompare(fold(b.title), "pt"));
+    poems = list.filter(p => !isPrivatePoem(p)).sort((a, b) => fold(a.title).localeCompare(fold(b.title), "pt"));
     rebuildChips();
     fillMenu();
     showPoem(poemOfDayIndex(poems), true);
