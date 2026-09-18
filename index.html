@@ -17,7 +17,7 @@
     margin: 0;
     color: var(--ink);
     background: var(--paper);
-    font: 16px/1.55 Georgia, "Times New Roman", serif;
+    font: 16px/1.55 Helvetica, Arial, sans-serif;
   }
   .wrap { max-width: 38rem; margin: 0 auto; padding: 2.2rem 1.25rem 4rem; }
   header.top {
@@ -56,7 +56,8 @@
     background: #fff;
     color: var(--ink);
   }
-  .stack { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.75rem; }
+  .busca-top { margin: 0 0 1.5rem; }
+  .stack { display: flex; flex-direction: column; gap: 1rem; margin: 2rem 0 0; padding-top: 1.5rem; border-top: 1px solid var(--line); }
   .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
   .chips button {
     font: 0.75rem Helvetica, Arial, sans-serif;
@@ -92,7 +93,7 @@
     font: 0.75rem Helvetica, Arial, sans-serif;
     color: var(--mute);
   }
-  .actions { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .actions { margin: 0 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
   #btn-prev, #btn-rand, #btn-next {
     font: 0.75rem Helvetica, Arial, sans-serif;
     letter-spacing: 0.04em;
@@ -117,16 +118,23 @@
     <div class="name">Ivan Rocha</div>
     <div class="sub">Poesias</div>
   </header>
+  <div class="actions">
+    <button type="button" id="btn-prev">Anterior</button>
+    <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
+    <button type="button" id="btn-next">Seguinte</button>
+  </div>
+  <div class="busca-top">
+    <label class="lbl" for="busca">Busca</label>
+    <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
+    <p id="status"></p>
+    <ul id="hits"></ul>
+  </div>
+  <p class="day-label" id="day-label">Poesia do dia</p>
+  <article id="leitor"></article>
   <div class="stack">
     <div>
       <label class="lbl" for="menu">Índice</label>
       <select id="menu"><option value="">Escolher um poema…</option></select>
-    </div>
-    <div>
-      <label class="lbl" for="busca">Busca</label>
-      <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
-      <p id="status"></p>
-      <ul id="hits"></ul>
     </div>
     <div>
       <div class="lbl">Tags</div>
@@ -136,13 +144,6 @@
       <div class="lbl">Compilações</div>
       <div class="chips" id="chips-comps"></div>
     </div>
-  </div>
-  <p class="day-label" id="day-label">Poesia do dia</p>
-  <article id="leitor"></article>
-  <div class="actions">
-    <button type="button" id="btn-prev">Anterior</button>
-    <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
-    <button type="button" id="btn-next">Seguinte</button>
   </div>
   <footer>Todos os textos © Ivan César Martins Rocha</footer>
 </div>
