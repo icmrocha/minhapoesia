@@ -93,7 +93,7 @@
     font: 0.75rem Helvetica, Arial, sans-serif;
     color: var(--mute);
   }
-  .actions { margin: 0 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .actions { margin: 0 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
   #btn-prev, #btn-rand, #btn-next {
     font: 0.75rem Helvetica, Arial, sans-serif;
     letter-spacing: 0.04em;
@@ -118,16 +118,14 @@
     <div class="name">Ivan Rocha</div>
     <div class="sub">Poesias</div>
   </header>
+  <div class="busca-top">
+    <label class="lbl" for="busca">Busca</label>
+    <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
+  </div>
   <div class="actions">
     <button type="button" id="btn-prev">Anterior</button>
     <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
     <button type="button" id="btn-next">Seguinte</button>
-  </div>
-  <div class="busca-top">
-    <label class="lbl" for="busca">Busca</label>
-    <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
-    <p id="status"></p>
-    <ul id="hits"></ul>
   </div>
   <p class="day-label" id="day-label">Poesia do dia</p>
   <article id="leitor"></article>
@@ -143,6 +141,10 @@
     <div>
       <div class="lbl">Compilações</div>
       <div class="chips" id="chips-comps"></div>
+    </div>
+    <div>
+      <p id="status"></p>
+      <ul id="hits"></ul>
     </div>
   </div>
   <footer>Todos os textos © Ivan César Martins Rocha</footer>
