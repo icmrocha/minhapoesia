@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ivan Rocha — Poesias</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --mute: #6b6b6b;
+    --line: #e4e4e4;
+    --paper: #fafafa;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font: 16px/1.55 Georgia, "Times New Roman", serif;
+  }
+  .wrap { max-width: 38rem; margin: 0 auto; padding: 2.2rem 1.25rem 4rem; }
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+  header.top .name {
+    font: 600 0.95rem/1.2 Helvetica, Arial, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  header.top .sub {
+    font: 0.8rem/1 Helvetica, Arial, sans-serif;
+    color: var(--mute);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  label.lbl, .lbl {
+    display: block;
+    font: 0.68rem/1 Helvetica, Arial, sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin: 0 0 0.35rem;
+  }
+  #busca, #menu {
+    width: 100%;
+    font: 0.95rem Helvetica, Arial, sans-serif;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+  }
+  .stack { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.75rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .chips button {
+    font: 0.75rem Helvetica, Arial, sans-serif;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid var(--line);
+    background: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .chips button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  #status { font: 0.8rem Helvetica, Arial, sans-serif; color: var(--mute); margin: 0.35rem 0 0; }
+  #hits { list-style: none; padding: 0; margin: 0.4rem 0 0; font: 0.9rem Helvetica, Arial, sans-serif; }
+  #hits li { margin: 0.2rem 0; }
+  #hits a { color: var(--ink); }
+  .day-label {
+    font: 0.68rem/1 Helvetica, Arial, sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--mute);
+    margin: 0 0 0.8rem;
+  }
+  #leitor h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0 0 0.9rem;
+    font-family: Helvetica, Arial, sans-serif;
+  }
+  .verse { white-space: pre-wrap; margin: 0; }
+  .verse em { font-style: italic; }
+  .meta-read {
+    margin-top: 1.25rem;
+    font: 0.75rem Helvetica, Arial, sans-serif;
+    color: var(--mute);
+  }
+  .actions { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  #btn-prev, #btn-rand, #btn-next {
+    font: 0.75rem Helvetica, Arial, sans-serif;
+    letter-spacing: 0.04em;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--ink);
+    background: transparent;
+    cursor: pointer;
+  }
+  #btn-prev:hover, #btn-rand:hover, #btn-next:hover { background: var(--ink); color: #fff; }
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    font: 0.75rem Helvetica, Arial, sans-serif;
+    color: var(--mute);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="name">Ivan Rocha</div>
+    <div class="sub">Poesias</div>
+  </header>
+  <div class="stack">
+    <div>
+      <label class="lbl" for="menu">Índice</label>
+      <select id="menu"><option value="">Escolher um poema…</option></select>
+    </div>
+    <div>
+      <label class="lbl" for="busca">Busca</label>
+      <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
+      <p id="status"></p>
+      <ul id="hits"></ul>
+    </div>
+    <div>
+      <div class="lbl">Tags</div>
+      <div class="chips" id="chips-tags"></div>
+    </div>
+    <div>
+      <div class="lbl">Compilações</div>
+      <div class="chips" id="chips-comps"></div>
+    </div>
+  </div>
+  <p class="day-label" id="day-label">Poesia do dia</p>
+  <article id="leitor"></article>
+  <div class="actions">
+    <button type="button" id="btn-prev">Anterior</button>
+    <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
+    <button type="button" id="btn-next">Seguinte</button>
+  </div>
+  <footer>Todos os textos © Ivan César Martins Rocha</footer>
+</div>
+<script>
+const JSON_URL = "https://icmrocha.github.io/poesia/poesias.json";
+const activeTags = new Set();
+const activeComps = new Set();
+let poems = [];
+let current = -1;
+
+function fold(s) {
+  return (s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+function asList(v) {
+  if (Array.isArray(v)) return v.map(x => String(x).trim()).filter(Boolean);
+  if (!v) return [];
+  return String(v).split(",").map(x => x.trim()).filter(Boolean);
+}
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function haystack(p) {
+  return fold([p.title, p.body || "", p.text || "", asList(p.tags).join(" "), asList(p.compilacoes).join(" ")].join(" "));
+}
+function dayStamp() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function poemOfDayIndex(list) {
+  const s = dayStamp();
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 33 + s.charCodeAt(i)) >>> 0;
+  return list.length ? h % list.length : 0;
+}
+function matches(p) {
+  const q = fold(document.getElementById("busca").value);
+  const tags = asList(p.tags).map(fold);
+  const comps = asList(p.compilacoes).map(fold);
+  const tagsOk = !activeTags.size || [...activeTags].every(k => tags.includes(k));
+  const compsOk = !activeComps.size || [...activeComps].every(k => comps.includes(k));
+  return tagsOk && compsOk && (!q || haystack(p).includes(q));
+}
+function fillChips(id, values, active) {
+  const box = document.getElementById(id);
+  box.innerHTML = "";
+  [...values.entries()].sort((a, b) => a[1].localeCompare(b[1], "pt")).forEach(([k, label]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.className = active.has(k) ? "on" : "";
+    b.onclick = () => {
+      if (active.has(k)) active.delete(k); else active.add(k);
+      rebuildChips();
+      refreshHits();
+    };
+    box.appendChild(b);
+  });
+}
+function rebuildChips() {
+  const tags = new Map(), comps = new Map();
+  poems.forEach(p => {
+    asList(p.tags).forEach(v => { const k = fold(v); if (!tags.has(k)) tags.set(k, v); });
+    asList(p.compilacoes).forEach(v => { const k = fold(v); if (!comps.has(k)) comps.set(k, v); });
+  });
+  fillChips("chips-tags", tags, activeTags);
+  fillChips("chips-comps", comps, activeComps);
+}
+function showPoem(i, asDay) {
+  if (i < 0 || i >= poems.length) return;
+  current = i;
+  const p = poems[i];
+  const tags = asList(p.tags);
+  const comps = asList(p.compilacoes);
+  const bits = [];
+  if (tags.length) bits.push(tags.join(" · "));
+  if (comps.length) bits.push(comps.join(" · "));
+  const lab = document.getElementById("day-label");
+  lab.textContent = "Poesia do dia";
+  lab.style.display = asDay ? "" : "none";
+  document.getElementById("leitor").innerHTML =
+    "<h2>" + esc(p.title) + "</h2>" +
+    '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>" +
+    (bits.length ? '<div class="meta-read">' + esc(bits.join(" · ")) + "</div>" : "");
+  document.getElementById("menu").value = String(i);
+}
+function refreshHits() {
+  const q = document.getElementById("busca").value.trim();
+  const filtering = q || activeTags.size || activeComps.size;
+  const hits = poems.map((p, i) => [p, i]).filter(([p]) => matches(p));
+  document.getElementById("status").textContent = filtering ? (hits.length + " poema(s)") : "";
+  const ul = document.getElementById("hits");
+  ul.innerHTML = "";
+  if (!filtering) return;
+  hits.slice(0, 40).forEach(([p, i]) => {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = "#";
+    a.textContent = p.title;
+    a.onclick = (ev) => { ev.preventDefault(); showPoem(i, false); };
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+  if (hits.length > 40) {
+    const li = document.createElement("li");
+    li.textContent = "…";
+    ul.appendChild(li);
+  }
+}
+function fillMenu() {
+  const sel = document.getElementById("menu");
+  sel.innerHTML = '<option value="">Escolher um poema…</option>';
+  poems.forEach((p, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = p.title;
+    sel.appendChild(o);
+  });
+}
+document.getElementById("busca").addEventListener("input", refreshHits);
+document.getElementById("menu").addEventListener("change", (ev) => {
+  const i = Number(ev.target.value);
+  if (!Number.isNaN(i) && ev.target.value !== "") showPoem(i, false);
+});
+document.getElementById("btn-rand").onclick = () => {
+  if (poems.length < 2) return;
+  let i = current;
+  while (i === current) i = Math.floor(Math.random() * poems.length);
+  showPoem(i, false);
+};
+document.getElementById("btn-prev").onclick = () => {
+  if (!poems.length) return;
+  const i = current < 0 ? 0 : (current - 1 + poems.length) % poems.length;
+  showPoem(i, false);
+};
+document.getElementById("btn-next").onclick = () => {
+  if (!poems.length) return;
+  const i = current < 0 ? 0 : (current + 1) % poems.length;
+  showPoem(i, false);
+};
+fetch(JSON_URL + "?t=" + Date.now())
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    const list = data.poems || data;
+    if (!Array.isArray(list)) throw new Error("JSON inesperado");
+    poems = list.slice().sort((a, b) => fold(a.title).localeCompare(fold(b.title), "pt"));
+    rebuildChips();
+    fillMenu();
+    showPoem(poemOfDayIndex(poems), true);
+  })
+  .catch(err => {
+    document.getElementById("status").textContent = "Não deu para carregar o JSON. " + err;
+  });
+</script>
+</body>
+</html>
