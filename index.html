@@ -34,17 +34,14 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  header.top .sub {
+  header.top .sub, header.top nav {
     font: 0.8rem/1 Helvetica, Arial, sans-serif;
     color: var(--mute);
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
-  .hint {
-    font: 0.8rem/1.45 Helvetica, Arial, sans-serif;
-    color: var(--mute);
-    margin: 0 0 0.55rem;
-  }
+  header.top a { color: inherit; text-decoration: none; }
+  header.top nav { display: flex; gap: 1rem; }
   label.lbl, .lbl {
     display: block;
     font: 0.68rem/1 Helvetica, Arial, sans-serif;
@@ -95,23 +92,21 @@
   .verse { white-space: pre-wrap; margin: 0; }
   .verse em { font-style: italic; }
   .meta-read {
-    margin-top: 0.85rem;
+    margin-top: 2.2rem;
     font: 0.75rem Helvetica, Arial, sans-serif;
     color: var(--mute);
     line-height: 1.6;
   }
   .actions { margin: 0 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
-  #btn-prev, #btn-rand, #btn-next, #btn-ig {
+  #btn-prev, #btn-rand, #btn-next {
     font: 0.75rem Helvetica, Arial, sans-serif;
     letter-spacing: 0.04em;
     padding: 0.45rem 0.8rem;
     border: 1px solid var(--ink);
     background: transparent;
     cursor: pointer;
-    color: var(--ink);
   }
-  #btn-prev:hover, #btn-rand:hover, #btn-next:hover, #btn-ig:hover { background: var(--ink); color: #fff; }
-  #btn-ig:disabled { opacity: 0.55; cursor: wait; }
+  #btn-prev:hover, #btn-rand:hover, #btn-next:hover { background: var(--ink); color: #fff; }
   footer {
     margin-top: 3rem;
     padding-top: 1rem;
@@ -119,48 +114,31 @@
     font: 0.75rem Helvetica, Arial, sans-serif;
     color: var(--mute);
   }
-
-  /* Área capturada pelo html2canvas: mesma fonte, com margem interna p/ Instagram */
-  #ig-card {
-    background: var(--paper);
-    padding: 2.4rem 1.6rem 2.6rem;
-  }
-  #ig-credit {
-    margin: 2.4rem 0 0;
-    font: 0.7rem/1 Helvetica, Arial, sans-serif;
-    letter-spacing: 0.04em;
-    color: var(--mute);
-  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="name">Ivan Rocha</div>
-    <div class="sub">Poesias</div>
+    <a class="name" href="index.html">Ivan Rocha</a>
+    <nav>
+      <a href="index.html">Poesias</a>
+      <a href="sobre.html">Sobre</a>
+    </nav>
   </header>
   <div class="busca-top">
     <label class="lbl" for="busca">Busca</label>
     <input type="search" id="busca" placeholder="Título, verso, tag ou compilação" autocomplete="off">
   </div>
-
-  <div id="ig-card">
-    <p class="day-label" id="day-label">Poesia do dia</p>
-    <article id="leitor"></article>
-    <p id="ig-credit">© Ivan Rocha</p>
-  </div>
-  <div class="meta-read" id="poem-meta"></div>
-
+  <p class="day-label" id="day-label">Poesia do dia</p>
+  <article id="leitor"></article>
   <div class="stack">
     <div class="actions">
       <button type="button" id="btn-prev">Anterior</button>
       <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
       <button type="button" id="btn-next">Seguinte</button>
-      <button type="button" id="btn-ig">Baixar Imagem</button>
     </div>
     <div>
       <label class="lbl" for="menu">Índice</label>
-      <p class="hint">Use o índice ou as tags abaixo para achar um poema.<br>Clique no título para abrir.</p>
       <select id="menu"><option value="">Escolher um poema…</option></select>
     </div>
     <div>
@@ -178,11 +156,11 @@
   </div>
   <footer>Todos os textos © Ivan César Martins Rocha</footer>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 const JSON_URL = "https://icmrocha.github.io/poesia/poesias.json";
+// Tag no site de revisão: o poema inteiro some daqui.
 const TAG_ESCONDE_POEMA = ["privado"];
+// Tags que existem no JSON mas não aparecem nos chips nem embaixo do texto.
 const TAG_ESCONDE_NOME = ["privado"];
 const activeTags = new Set();
 const activeComps = new Set();
@@ -256,25 +234,6 @@ function rebuildChips() {
   fillChips("chips-tags", tags, activeTags);
   fillChips("chips-comps", comps, activeComps);
 }
-function indexFromHash() {
-  const h = decodeURIComponent((location.hash || "").replace(/^#/, "")).trim();
-  if (!h) return -1;
-  const m = /^p(\d+)$/i.exec(h);
-  if (m) {
-    const n = Number(m[1]);
-    return n >= 0 && n < poems.length ? n : -1;
-  }
-  const s = slug(h);
-  return poems.findIndex(p => slug(p.title) === s);
-}
-function setHashFor(i) {
-  const p = poems[i];
-  if (!p) return;
-  const next = slug(p.title);
-  if ((location.hash || "").replace(/^#/, "") !== next) {
-    history.replaceState(null, "", "#" + next);
-  }
-}
 function showPoem(i, asDay) {
   if (i < 0 || i >= poems.length) return;
   current = i;
@@ -289,13 +248,10 @@ function showPoem(i, asDay) {
   lab.style.display = asDay ? "" : "none";
   document.getElementById("leitor").innerHTML =
     "<h2>" + esc(p.title) + "</h2>" +
-    '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>";
-  document.getElementById("poem-meta").textContent = bits.join(" · ");
+    '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>" +
+    (bits.length ? '<div class="meta-read">' + esc(bits.join(" · ")) + "</div>" : "");
   document.getElementById("menu").value = String(i);
-  if (asDay) {
-    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-  } else {
-    setHashFor(i);
+  if (!asDay) {
     document.getElementById("leitor").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
@@ -310,7 +266,7 @@ function refreshHits() {
   hits.slice(0, 40).forEach(([p, i]) => {
     const li = document.createElement("li");
     const a = document.createElement("a");
-    a.href = "#" + slug(p.title);
+    a.href = "#";
     a.textContent = p.title;
     a.onclick = (ev) => { ev.preventDefault(); showPoem(i, false); };
     li.appendChild(a);
@@ -332,47 +288,6 @@ function fillMenu() {
     sel.appendChild(o);
   });
 }
-
-function slug(s) {
-  return fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "poema";
-}
-
-async function baixarInstagram() {
-  const btn = document.getElementById("btn-ig");
-  const card = document.getElementById("ig-card");
-  if (!window.html2canvas) {
-    document.getElementById("status").textContent = "html2canvas não carregou.";
-    return;
-  }
-  btn.disabled = true;
-  const old = btn.textContent;
-  btn.textContent = "Gerando…";
-  try {
-    const canvas = await html2canvas(card, {
-      backgroundColor: "#fafafa",
-      scale: Math.max(2, 1080 / card.offsetWidth),
-      useCORS: true,
-      logging: false,
-      onclone: (doc) => {
-        const c = doc.getElementById("ig-card");
-        if (c) {
-          c.style.background = "#fafafa";
-        }
-      }
-    });
-    const nome = poems[current] ? slug(poems[current].title) : "poema";
-    const a = document.createElement("a");
-    a.download = nome + ".png";
-    a.href = canvas.toDataURL("image/png");
-    a.click();
-  } catch (err) {
-    document.getElementById("status").textContent = "Não deu para gerar a imagem. " + err;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = old;
-  }
-}
-
 document.getElementById("busca").addEventListener("input", refreshHits);
 document.getElementById("menu").addEventListener("change", (ev) => {
   const i = Number(ev.target.value);
@@ -394,8 +309,6 @@ document.getElementById("btn-next").onclick = () => {
   const i = current < 0 ? 0 : (current + 1) % poems.length;
   showPoem(i, false);
 };
-document.getElementById("btn-ig").onclick = baixarInstagram;
-
 fetch(JSON_URL + "?t=" + Date.now())
   .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(data => {
@@ -404,17 +317,11 @@ fetch(JSON_URL + "?t=" + Date.now())
     poems = list.filter(p => !isPrivatePoem(p)).sort((a, b) => fold(a.title).localeCompare(fold(b.title), "pt"));
     rebuildChips();
     fillMenu();
-    const fromHash = indexFromHash();
-    if (fromHash >= 0) showPoem(fromHash, false);
-    else showPoem(poemOfDayIndex(poems), true);
+    showPoem(poemOfDayIndex(poems), true);
   })
   .catch(err => {
     document.getElementById("status").textContent = "Não deu para carregar o JSON. " + err;
   });
-window.addEventListener("hashchange", () => {
-  const i = indexFromHash();
-  if (i >= 0 && i !== current) showPoem(i, false);
-});
 </script>
 </body>
 </html>
