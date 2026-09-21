@@ -256,6 +256,25 @@ function rebuildChips() {
   fillChips("chips-tags", tags, activeTags);
   fillChips("chips-comps", comps, activeComps);
 }
+function indexFromHash() {
+  const h = decodeURIComponent((location.hash || "").replace(/^#/, "")).trim();
+  if (!h) return -1;
+  const m = /^p(\d+)$/i.exec(h);
+  if (m) {
+    const n = Number(m[1]);
+    return n >= 0 && n < poems.length ? n : -1;
+  }
+  const s = slug(h);
+  return poems.findIndex(p => slug(p.title) === s);
+}
+function setHashFor(i) {
+  const p = poems[i];
+  if (!p) return;
+  const next = slug(p.title);
+  if ((location.hash || "").replace(/^#/, "") !== next) {
+    history.replaceState(null, "", "#" + next);
+  }
+}
 function showPoem(i, asDay) {
   if (i < 0 || i >= poems.length) return;
   current = i;
@@ -273,7 +292,10 @@ function showPoem(i, asDay) {
     '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>";
   document.getElementById("poem-meta").textContent = bits.join(" · ");
   document.getElementById("menu").value = String(i);
-  if (!asDay) {
+  if (asDay) {
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  } else {
+    setHashFor(i);
     document.getElementById("leitor").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
@@ -288,7 +310,7 @@ function refreshHits() {
   hits.slice(0, 40).forEach(([p, i]) => {
     const li = document.createElement("li");
     const a = document.createElement("a");
-    a.href = "#";
+    a.href = "#" + slug(p.title);
     a.textContent = p.title;
     a.onclick = (ev) => { ev.preventDefault(); showPoem(i, false); };
     li.appendChild(a);
@@ -382,11 +404,17 @@ fetch(JSON_URL + "?t=" + Date.now())
     poems = list.filter(p => !isPrivatePoem(p)).sort((a, b) => fold(a.title).localeCompare(fold(b.title), "pt"));
     rebuildChips();
     fillMenu();
-    showPoem(poemOfDayIndex(poems), true);
+    const fromHash = indexFromHash();
+    if (fromHash >= 0) showPoem(fromHash, false);
+    else showPoem(poemOfDayIndex(poems), true);
   })
   .catch(err => {
     document.getElementById("status").textContent = "Não deu para carregar o JSON. " + err;
   });
+window.addEventListener("hashchange", () => {
+  const i = indexFromHash();
+  if (i >= 0 && i !== current) showPoem(i, false);
+});
 </script>
 </body>
 </html>
