@@ -40,6 +40,11 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
+  .hint {
+    font: 0.8rem/1.45 Helvetica, Arial, sans-serif;
+    color: var(--mute);
+    margin: 0 0 0.55rem;
+  }
   label.lbl, .lbl {
     display: block;
     font: 0.68rem/1 Helvetica, Arial, sans-serif;
@@ -90,7 +95,7 @@
   .verse { white-space: pre-wrap; margin: 0; }
   .verse em { font-style: italic; }
   .meta-read {
-    margin-top: 2.2rem;
+    margin-top: 0.85rem;
     font: 0.75rem Helvetica, Arial, sans-serif;
     color: var(--mute);
     line-height: 1.6;
@@ -144,16 +149,18 @@
     <article id="leitor"></article>
     <p id="ig-credit">© Ivan Rocha</p>
   </div>
+  <div class="meta-read" id="poem-meta"></div>
 
   <div class="stack">
     <div class="actions">
       <button type="button" id="btn-prev">Anterior</button>
       <button type="button" id="btn-rand">Escolher outra aleatoriamente</button>
       <button type="button" id="btn-next">Seguinte</button>
-      <button type="button" id="btn-ig">Baixar para Instagram</button>
+      <button type="button" id="btn-ig">Baixar Imagem</button>
     </div>
     <div>
       <label class="lbl" for="menu">Índice</label>
+      <p class="hint">Use o índice ou as tags abaixo para achar um poema.<br>Clique no título para abrir.</p>
       <select id="menu"><option value="">Escolher um poema…</option></select>
     </div>
     <div>
@@ -263,8 +270,8 @@ function showPoem(i, asDay) {
   lab.style.display = asDay ? "" : "none";
   document.getElementById("leitor").innerHTML =
     "<h2>" + esc(p.title) + "</h2>" +
-    '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>" +
-    (bits.length ? '<div class="meta-read">' + esc(bits.join(" · ")) + "</div>" : "");
+    '<div class="verse">' + (p.body_html || esc(p.body || p.text || "")) + "</div>";
+  document.getElementById("poem-meta").textContent = bits.join(" · ");
   document.getElementById("menu").value = String(i);
   if (!asDay) {
     document.getElementById("leitor").scrollIntoView({ behavior: "smooth", block: "start" });
